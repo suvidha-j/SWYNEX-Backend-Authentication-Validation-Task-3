@@ -5,6 +5,8 @@ const db = require("./database");
 
 dotenv.config();
 
+const authenticate = require("./authMiddleware");
+
 const app = express();
 
 app.use(cors());
@@ -27,6 +29,17 @@ db.run(`
 
 const PORT = process.env.PORT || 5000;
 
+// Common error response
+function errorResponse(res, status, code, message) {
+  return res.status(status).json({
+    success: false,
+    error: {
+      code,
+      message
+    }
+  });
+}
+
 // Home route
 app.get("/", (req, res) => {
   res.json({
@@ -35,15 +48,27 @@ app.get("/", (req, res) => {
   });
 });
 
-// CREATE - Create a new task
-app.post("/api/tasks", (req, res) => {
+// CREATE - Protected endpoint
+app.post("/api/tasks", authenticate, (req, res) => {
   const { title } = req.body;
 
-  if (!title || !title.trim()) {
-    return res.status(400).json({
-      success: false,
-      message: "Title is required"
-    });
+  // Validation
+  if (typeof title !== "string" || !title.trim()) {
+    return errorResponse(
+      res,
+      400,
+      "INVALID_TITLE",
+      "Title is required and must be a non-empty string"
+    );
+  }
+
+  if (title.trim().length > 100) {
+    return errorResponse(
+      res,
+      400,
+      "TITLE_TOO_LONG",
+      "Title must not exceed 100 characters"
+    );
   }
 
   db.run(
@@ -51,10 +76,12 @@ app.post("/api/tasks", (req, res) => {
     [title.trim()],
     function (err) {
       if (err) {
-        return res.status(500).json({
-          success: false,
-          message: "Failed to create task"
-        });
+        return errorResponse(
+          res,
+          500,
+          "CREATE_FAILED",
+          "Failed to create task"
+        );
       }
 
       res.status(201).json({
@@ -74,10 +101,12 @@ app.post("/api/tasks", (req, res) => {
 app.get("/api/tasks", (req, res) => {
   db.all("SELECT * FROM tasks", [], (err, rows) => {
     if (err) {
-      return res.status(500).json({
-        success: false,
-        message: "Failed to fetch tasks"
-      });
+      return errorResponse(
+        res,
+        500,
+        "FETCH_FAILED",
+        "Failed to fetch tasks"
+      );
     }
 
     res.status(200).json({
@@ -92,29 +121,65 @@ app.put("/api/tasks/:id", (req, res) => {
   const { title, completed } = req.body;
   const { id } = req.params;
 
-  if (!title || !title.trim()) {
-    return res.status(400).json({
-      success: false,
-      message: "Title is required"
-    });
+  // ID validation
+  if (!/^\d+$/.test(id)) {
+    return errorResponse(
+      res,
+      400,
+      "INVALID_ID",
+      "Task ID must be a number"
+    );
+  }
+
+  // Title validation
+  if (typeof title !== "string" || !title.trim()) {
+    return errorResponse(
+      res,
+      400,
+      "INVALID_TITLE",
+      "Title is required and must be a non-empty string"
+    );
+  }
+
+  if (title.trim().length > 100) {
+    return errorResponse(
+      res,
+      400,
+      "TITLE_TOO_LONG",
+      "Title must not exceed 100 characters"
+    );
+  }
+
+  // Completed validation
+  if (completed !== undefined && typeof completed !== "boolean") {
+    return errorResponse(
+      res,
+      400,
+      "INVALID_COMPLETED",
+      "Completed must be true or false"
+    );
   }
 
   db.run(
     "UPDATE tasks SET title = ?, completed = ? WHERE id = ?",
-    [title.trim(), completed ? 1 : 0, id],
+    [title.trim(), completed === true ? 1 : 0, id],
     function (err) {
       if (err) {
-        return res.status(500).json({
-          success: false,
-          message: "Failed to update task"
-        });
+        return errorResponse(
+          res,
+          500,
+          "UPDATE_FAILED",
+          "Failed to update task"
+        );
       }
 
       if (this.changes === 0) {
-        return res.status(404).json({
-          success: false,
-          message: "Task not found"
-        });
+        return errorResponse(
+          res,
+          404,
+          "TASK_NOT_FOUND",
+          "Task not found"
+        );
       }
 
       res.json({
@@ -129,22 +194,36 @@ app.put("/api/tasks/:id", (req, res) => {
 app.delete("/api/tasks/:id", (req, res) => {
   const { id } = req.params;
 
+  // ID validation
+  if (!/^\d+$/.test(id)) {
+    return errorResponse(
+      res,
+      400,
+      "INVALID_ID",
+      "Task ID must be a number"
+    );
+  }
+
   db.run(
     "DELETE FROM tasks WHERE id = ?",
     [id],
     function (err) {
       if (err) {
-        return res.status(500).json({
-          success: false,
-          message: "Failed to delete task"
-        });
+        return errorResponse(
+          res,
+          500,
+          "DELETE_FAILED",
+          "Failed to delete task"
+        );
       }
 
       if (this.changes === 0) {
-        return res.status(404).json({
-          success: false,
-          message: "Task not found"
-        });
+        return errorResponse(
+          res,
+          404,
+          "TASK_NOT_FOUND",
+          "Task not found"
+        );
       }
 
       res.json({
@@ -155,6 +234,17 @@ app.delete("/api/tasks/:id", (req, res) => {
   );
 });
 
+// Handle unknown routes
+app.use((req, res) => {
+  return errorResponse(
+    res,
+    404,
+    "ROUTE_NOT_FOUND",
+    "Route not found"
+  );
+});
+
+// Start server
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });

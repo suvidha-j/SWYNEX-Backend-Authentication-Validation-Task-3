@@ -1,34 +1,34 @@
-# SWYNEX Backend Database and CRUD API
+# SWYNEX Backend Authentication, Validation and Integration - Task 3
 
 ## Project Overview
 
-This project is a backend REST API built using Node.js, Express.js, and SQLite.
-
-It implements CRUD operations for a Task resource.
+This project extends the backend API with API key authentication, input validation, and consistent error responses.
 
 ## Technologies Used
 
 - Node.js
 - Express.js
-- SQLite3
+- SQLite
 - dotenv
 - CORS
 
-## Database
+## Authentication
 
-SQLite database is used to store tasks.
+The `POST /api/tasks` endpoint is protected using an API key.
 
-Task fields:
-- id
-- title
-- completed
+The API key must be sent using the following request header:
 
-## API Endpoints
+`x-api-key`
 
-### Create Task
-POST `/api/tasks`
+The API key is stored securely in the `.env` file and is not committed to GitHub.
 
-```json
-{
-  "title": "Learn Node.js"
-}
+## Protected Endpoint
+
+### POST /api/tasks
+
+Creates a new task.
+
+### Required Header
+
+```text
+x-api-key: YOUR_API_KEY
