@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Update Task</title>
+</head>
+<body>
+
+  <h2>Update Task</h2>
+
+  <button onclick="updateTask()">Update Task 1</button>
+
+  <script>
+    function updateTask() {
+      fetch("http://localhost:5000/api/tasks/1", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          title: "Learn Backend Development",
+          completed: true
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        document.body.innerHTML += "<pre>" + JSON.stringify(data, null, 2) + "</pre>";
+      })
+      .catch(error => {
+        document.body.innerHTML += "<pre>" + error + "</pre>";
+      });
+    }
+  </script>
+
+</body>
+</html>

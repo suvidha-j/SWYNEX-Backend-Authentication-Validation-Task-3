@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Delete Task</title>
+</head>
+<body>
+
+  <h2>Delete Task</h2>
+
+  <button onclick="deleteTask()">Delete Task 1</button>
+
+  <script>
+    function deleteTask() {
+      fetch("http://localhost:5000/api/tasks/1", {
+        method: "DELETE"
+      })
+      .then(response => response.json())
+      .then(data => {
+        document.body.innerHTML +=
+          "<pre>" + JSON.stringify(data, null, 2) + "</pre>";
+      })
+      .catch(error => {
+        document.body.innerHTML += "<pre>" + error + "</pre>";
+      });
+    }
+  </script>
+
+</body>
+</html>
