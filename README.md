@@ -1,34 +1,33 @@
-# SWYNEX Backend Authentication, Validation and Integration - Task 3
+# SWYNEX Deployable Backend Service - Task 4
 
 ## Project Overview
 
-This project extends the backend API with API key authentication, input validation, and consistent error responses.
+This project is a deployable backend service developed as part of the SWYNEX Backend Developer Internship.
+
+The service provides a RESTful Task Management API with SQLite database integration, API key authentication, input validation, CRUD operations, and consistent error handling.
 
 ## Technologies Used
 
 - Node.js
 - Express.js
 - SQLite
+- sqlite3
 - dotenv
 - CORS
 
-## Authentication
-
-The `POST /api/tasks` endpoint is protected using an API key.
-
-The API key must be sent using the following request header:
-
-`x-api-key`
-
-The API key is stored securely in the `.env` file and is not committed to GitHub.
-
-## Protected Endpoint
-
-### POST /api/tasks
-
-Creates a new task.
-
-### Required Header
+## Project Structure
 
 ```text
-x-api-key: YOUR_API_KEY
+SWYNEX-Deployable-Backend-Service
+│
+├── src
+│   ├── server.js
+│   ├── database.js
+│   └── authMiddleware.js
+│
+├── database.sqlite
+├── .env
+├── .gitignore
+├── package.json
+├── package-lock.json
+└── README.md
